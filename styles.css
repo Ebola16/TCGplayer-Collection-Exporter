@@ -1,0 +1,96 @@
+body { font-family: 'Inter', Arial, sans-serif; margin: 26px; background:#f7f7fb; color:#222; }
+h2 { margin-bottom: 12px; font-size: 28px; }
+a { color:#2563eb; text-decoration:none; }
+a:hover { text-decoration:underline; }
+
+.top-links {
+  margin-bottom: 18px;
+  display:flex;
+  gap:18px;
+  font-size:15px;
+}
+
+.card {
+  background:white;
+  border-radius:12px;
+  padding:20px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.08);
+  margin-bottom:20px;
+}
+
+.notice {
+  background:#fffce7;
+  border:1px solid #e5df9a;
+  padding:14px;
+  border-radius:10px;
+  margin-bottom:20px;
+  line-height:1.5;
+}
+
+#dropZone {
+  border:2px dashed #888; padding:26px; text-align:center; border-radius:10px; cursor:pointer;
+  background:#fafafa;
+  transition:0.2s;
+}
+#dropZone.dragover {
+  border-color:#2563eb; background:#eef3ff; color:#2563eb;
+}
+
+input[type=file]{ display:none; }
+
+#controls {
+  margin-top:10px;
+  display:flex;
+  gap:12px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+
+#status { margin-top:6px; font-size:14px; color:#444; }
+
+button {
+  background:#2563eb;
+  color:white;
+  padding:10px 16px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:14px;
+  transition:0.15s;
+}
+button:disabled {
+  background:#9bb5ee;
+  cursor:not-allowed;
+}
+button:hover:not(:disabled) {
+  background:#1d4ed8;
+}
+
+table { width:100%; border-collapse:collapse; margin-top:16px; background:white; border-radius:8px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,0.06); }
+th, td { padding:10px; border-bottom:1px solid #e5e7eb; font-size:14px; }
+th {
+  background:#f3f4f6;
+  -webkit-user-select:none;
+  cursor:pointer; user-select:none;
+  font-weight:600;
+}
+th:hover { background:#e8ebf4; }
+
+a.cardlink { color:#2563eb; }
+a.cardlink:hover { text-decoration:underline; }
+
+#output:empty {
+    display: none;
+}
+
+/* Mobile enhancements */
+@media (max-width: 600px) {
+  body { margin: 16px; }
+  .card { padding: 14px; }
+  button { width: 100%; }
+  #controls { flex-direction: column; align-items: stretch; }
+  #dropZone { padding: 18px; font-size: 14px; }
+  table { font-size: 13px; }
+  th, td { padding: 8px; }
+  #output { overflow-x: auto; }
+}

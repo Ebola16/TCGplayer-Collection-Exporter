@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>TCGplayer Collection Exporter</title>
+
+    <meta
+      name="description"
+      content="Export your TCGplayer collection HTML file to a downloadable spreadsheet (CSV or XLSX). Now you can backup and view your collection without worring about accidently changing card quantities!"
+    />
+    <meta name="author" content="Ebola16" />
+
+    <link rel="stylesheet" href="styles.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="parser.js" defer></script>
+  </head>
+</html>
+
+<body>
+  <h1>TCGplayer Collection Exporter</h1>
+
+  <div class="top-links card" style="flex-direction:row; gap:8px;">
+    <span>Author: <a href="https://ebola16.github.io" target="_blank" rel="noreferrer">Ebola16</a></span>
+    <span>|</span>
+    <a href="https://github.com/Ebola16/TCGplayer-Collection-Exporter"
+       target="_blank" rel="noreferrer">Source Code</a>
+    <span>|</span>
+    <a href="https://www.paypal.com/donate/?business=9JYM3X6FN3MLW&no_recurring=0&item_name=Thank+you%21&currency_code=USD"
+       target="_blank" rel="noreferrer">Donate</a>
+  </div>
+
+  <div class="notice card">
+    <strong>Instructions:</strong><br>
+    1) Open your <a href="https://www.tcgplayer.com" target="_blank" rel="noreferrer">TCGplayer</a> collection page and wait for the table to finish loading.<br>
+    2) Press <b>Ctrl+S</b> (Windows) or <b>Cmd+S</b> (Mac).<br>
+    3) Choose <b>“Webpage, Complete”</b> and save the .html file.<br>
+    4) Upload that .html file here.<br>
+    5) Download your collection as a CSV or XLSX spreadsheet!<br>
+  </div>
+
+  <div class="card">
+    <label style="font-size:15px">
+      <input type="checkbox" id="enableLinks" checked>
+      <strong>Save Card Links</strong> (links may not display unless Excel Protected View is disabled)
+    </label>
+
+    <div id="controls">
+      <div id="dropZone">Drag & Drop HTML file here, or click to choose</div>
+      <input id="fileInput" type="file" accept=".html,.htm" aria-label="Upload TCGplayer HTML file" />
+      <button id="exportCsvBtn" disabled>Export CSV</button>
+      <button id="exportXlsxBtn" disabled>Export XLSX</button>
+      <div id="status">No file loaded.</div>
+    </div>
+  </div>
+
+  <div id="output" class="card"></div>
+
+</body>
+</html>
