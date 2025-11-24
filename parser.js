@@ -233,7 +233,11 @@ exportXlsxBtn.addEventListener('click', () => {
       } else text = String(cell);
       return Math.max(max, text.length);
     }, h.length);
-    return { wch: Math.max(3, maxLen + 1) };
+    let width = Math.max(3, maxLen + 1);
+    if (['Low','Mid','High'].includes(h)) {
+      width += 4;
+    }
+    return { wch: width };
   });
   ws['!cols'] = colWidths;
 
