@@ -27,6 +27,29 @@ a:hover { text-decoration:underline; }
   line-height:1.5;
 }
 
+.ad-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Show fallback message by default */
+#adCard #adblockMsg {
+  display: block;
+}
+
+/* Hide message when ad successfully fills */
+#adCard:has(ins.adsbygoogle[data-ad-status="filled"]) #adblockMsg {
+  display: none;
+}
+
+/* Fallback message styling */
+#adblockMsg {
+  padding: 12px 4px;
+  text-align: center;
+  font-size: 14px;
+  opacity: 0.75;
+}
+
 #dropZone {
   border:2px dashed #888; padding:26px; text-align:center; border-radius:10px; cursor:pointer;
   background:#fafafa;
