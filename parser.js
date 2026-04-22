@@ -60,7 +60,7 @@ function parseHTML(rawHtml) {
   if (!table) {
     statusEl.innerHTML = '<strong style="color:#b91c1c">ERROR:</strong> Could not find TCGplayer collection table.';
     const snippet = rawHtml.slice(0, 4000).replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    outputEl.innerHTML = `<h4>Diagnostic snippet</h4><pre style="max-height:300px;overflow:auto;background:#f6f6f6;padding:8px">${snippet}</pre>`;
+    outputEl.innerHTML = `<pre>${snippet}</pre>`;
     return;
   }
 
@@ -80,11 +80,11 @@ function parseHTML(rawHtml) {
     const name = linkEl ? safeText(linkEl) : safeText(nameCell);
     const link = linkEl ? (linkEl.href || '') : '';
 
-    const set = (tds[4] ? safeText(tds[4]) : '');
+    const set = tds[4] ? safeText(tds[4]) : '';
 
-    const lowRaw  = (tds[5] ? safeText(tds[5]) : '');
-    const midRaw  = (tds[6] ? safeText(tds[6]) : '');
-    const highRaw = (tds[7] ? safeText(tds[7]) : '');
+    const lowRaw  = tds[5] ? safeText(tds[5]) : '';
+    const midRaw  = tds[6] ? safeText(tds[6]) : '';
+    const highRaw = tds[7] ? safeText(tds[7]) : '';
 
     parsedRows.push({
       Name: name,
@@ -94,21 +94,12 @@ function parseHTML(rawHtml) {
       Want: parseIntSafe(wantRaw),
       Trade: parseIntSafe(tradeRaw),
       Low: parseFloatSafe(lowRaw),
-      LowRaw: lowRaw,
       Mid: parseFloatSafe(midRaw),
-      MidRaw: midRaw,
-      High: parseFloatSafe(highRaw),
-      HighRaw: highRaw
+      High: parseFloatSafe(highRaw)
     });
   });
 
   statusEl.textContent = `Parsed ${parsedRows.length} rows.`;
-  if (parsedRows.length === 0) {
-    outputEl.innerHTML = '<p>No product rows found.</p>';
-    exportCsvBtn.disabled = true;
-    exportXlsxBtn.disabled = true;
-    return;
-  }
 
   updateExportButtons();
   renderTable();
@@ -123,7 +114,10 @@ function renderTable() {
   html += '</tr></thead><tbody>';
 
   parsedRows.forEach(r => {
-    const nameCell = enableLinks && r.Link ? `<a class="cardlink" href="${r.Link}" target="_blank">${escapeHtml(r.Name)}</a>` : escapeHtml(r.Name);
+    const nameCell = enableLinks && r.Link
+      ? `<a class="cardlink" href="${r.Link}" target="_blank">${escapeHtml(r.Name)}</a>`
+      : escapeHtml(r.Name);
+
     html += '<tr>';
     html += `<td>${nameCell}</td>`;
     html += `<td>${escapeHtml(r.Set)}</td>`;
@@ -147,10 +141,11 @@ function onSort(col) {
   parsedRows.sort((a,b) => {
     let ax = a[col], bx = b[col];
     if (typeof ax === 'number' && typeof bx === 'number') return sortAsc ? ax - bx : bx - ax;
-    ax = (ax === undefined || ax === null) ? '' : String(ax).toLowerCase();
-    bx = (bx === undefined || bx === null) ? '' : String(bx).toLowerCase();
+    ax = String(ax ?? '').toLowerCase();
+    bx = String(bx ?? '').toLowerCase();
     return sortAsc ? ax.localeCompare(bx) : bx.localeCompare(ax);
   });
+
   renderTable();
 }
 
@@ -161,18 +156,13 @@ function updateExportButtons() {
 }
 
 exportCsvBtn.addEventListener('click', () => {
-  if (!parsedRows.length) return alert('No parsed rows to export.');
+  if (!parsedRows.length) return;
 
-  const enableLinks = document.getElementById('enableLinks').checked;
   const headers = ['Name','Set','Have','Want','Trade','Low','Mid','High'];
-
-  const csvRows = [];
-  csvRows.push(headers.join(',')); // Header
-
-  parsedRows.forEach(r => {
-    const nameCell = enableLinks && r.Link ? `"${r.Name} (${r.Link})"` : `"${r.Name}"`;
-    const row = [
-      nameCell,
+  const csv = [
+    headers.join(','),
+    ...parsedRows.map(r => [
+      `"${r.Name}"`,
       `"${r.Set}"`,
       r.Have,
       r.Want,
@@ -180,37 +170,33 @@ exportCsvBtn.addEventListener('click', () => {
       r.Low,
       r.Mid,
       r.High
-    ];
-    csvRows.push(row.join(','));
-  });
+    ].join(','))
+  ].join('\r\n');
 
-  const csvContent = csvRows.join('\r\n');
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const blob = new Blob([csv], { type: 'text/csv' });
   const url = URL.createObjectURL(blob);
-
-  const link = document.createElement('a');
-  link.href = url;
-  link.setAttribute('download', 'tcgplayer_collection.csv');
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'tcgplayer_collection.csv';
+  a.click();
   URL.revokeObjectURL(url);
 });
 
-exportXlsxBtn.addEventListener('click', () => {
-  if (!parsedRows.length) return alert('No parsed rows to export.');
+exportXlsxBtn.addEventListener('click', async () => {
+  if (!parsedRows.length) return;
 
   const enableLinks = document.getElementById('enableLinks').checked;
-  const header = ['Name','Set','Have','Want','Trade','Low','Mid','High'];
-  const aoa = [header];
+  const headers = ['Name','Set','Have','Want','Trade','Low','Mid','High'];
+
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet('TCG Collection');
+
+  worksheet.addRow(headers);
+  worksheet.views = [{ state: 'frozen', ySplit: 1 }];
 
   parsedRows.forEach(r => {
-    const nameCell = enableLinks && r.Link
-      ? { f: `HYPERLINK(\"${r.Link.replace(/\"/g,'""')}\", \"${r.Name.replace(/\"/g,'""')}\")` }
-      : r.Name;
-
-    aoa.push([
-      nameCell,
+    const row = worksheet.addRow([
+      r.Name,
       r.Set,
       r.Have,
       r.Want,
@@ -219,68 +205,53 @@ exportXlsxBtn.addEventListener('click', () => {
       r.Mid,
       r.High
     ]);
-  });
 
-  const ws = XLSX.utils.aoa_to_sheet(aoa);
-  const colWidths = header.map((h, cIdx) => {
-    const maxLen = aoa.reduce((max, row) => {
-      const cell = row[cIdx];
-      let text = '';
-      if (!cell) text = '';
-      else if (typeof cell === 'object' && cell.f) {
-        const m = cell.f.match(/HYPERLINK\([^,]+,\s*\"(.+)\"\)/i);
-        text = m ? m[1] : cell.f;
-      } else text = String(cell);
-      return Math.max(max, text.length);
-    }, h.length);
-    let width = Math.max(3, maxLen + 1);
-    if (['Low','Mid','High'].includes(h)) {
-      width += 4;
+    if (enableLinks && r.Link) {
+      const cell = row.getCell(1);
+      cell.value = { text: r.Name, hyperlink: r.Link };
+      cell.font = { color: { argb: 'FF0563C1' }, underline: true };
     }
-    return { wch: width };
   });
-  ws['!cols'] = colWidths;
 
-  const colIndex = {};
-  header.forEach((h, i) => colIndex[h] = i);
+  const columns = headers.map(header => {
+    let max = header.length;
 
-  for (let r = 1; r < aoa.length; r++) {
-    const src = parsedRows[r-1];
-    [['Low','LowRaw'], ['Mid','MidRaw'], ['High','HighRaw']].forEach(([colName, rawField]) => {
-      const c = colIndex[colName];
-      const addr = XLSX.utils.encode_cell({ r, c });
-      const cell = ws[addr];
-      if (!cell) return;
-      const rawVal = (src[rawField] || '').toString().trim();
-      if (rawVal.startsWith('$') || /^\$\s*\d/.test(rawVal)) {
-        if (typeof cell.v === 'number') {
-          cell.t = 'n'; cell.z = '"$"#,##0.00';
-        } else {
-          const coerced = parseFloat(String(cell.v).replace(/[^0-9.\-]/g,''));	
-          if (!Number.isNaN(coerced)) {
-            cell.v = coerced; cell.t = 'n'; cell.z = '"$"#,##0.00';
-          }
-        }
-      }
+    parsedRows.forEach(r => {
+      const val = String(r[header] ?? '');
+      if (val.length > max) max = val.length;
     });
-    ['Have','Want','Trade'].forEach(colName => {
-      const c = colIndex[colName];
-      const addr = XLSX.utils.encode_cell({ r, c });
-      const cell = ws[addr];
-      if (!cell) return;
-      const srcVal = parsedRows[r-1][colName];
-      if (typeof srcVal === 'number') {
-        cell.v = srcVal; cell.t = 'n';
-      } else {
-        const coerced = parseInt(String(cell.v).replace(/[^0-9\-]/g,''),10);
-        if (!Number.isNaN(coerced)) { cell.v = coerced; cell.t = 'n'; }
-      }
-    });
-  }
 
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'TCG Collection');
-  XLSX.writeFile(wb, 'tcgplayer_collection.xlsx');
+    let width = max + 2;
+
+    if (header === 'Name') width = Math.min(width, 60);
+    if (header === 'Set') width = Math.min(width, 45);
+    if (['Have','Want','Trade'].includes(header)) width = 10;
+    if (['Low','Mid','High'].includes(header)) width = 12;
+
+    return { key: header, width };
+  });
+
+  worksheet.columns = columns;
+
+  const buffer = await workbook.xlsx.writeBuffer();
+
+  const blob = new Blob([buffer], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  });
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'tcgplayer_collection.xlsx';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 });
 
-function escapeHtml(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escapeHtml(s) {
+  return String(s || '')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;');
+}
