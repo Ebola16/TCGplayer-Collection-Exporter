@@ -1,0 +1,4 @@
+ExcelJS
+https://github.com/exceljs/exceljs
+Copyright (c) ExcelJS contributors
+MIT License
