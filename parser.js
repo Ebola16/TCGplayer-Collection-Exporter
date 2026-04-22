@@ -59,8 +59,6 @@ function parseHTML(rawHtml) {
 
   if (!table) {
     statusEl.innerHTML = '<strong style="color:#b91c1c">ERROR:</strong> Could not find TCGplayer collection table.';
-    const snippet = rawHtml.slice(0, 4000).replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    outputEl.innerHTML = `<pre>${snippet}</pre>`;
     return;
   }
 
@@ -141,9 +139,7 @@ function onSort(col) {
   parsedRows.sort((a,b) => {
     let ax = a[col], bx = b[col];
     if (typeof ax === 'number' && typeof bx === 'number') return sortAsc ? ax - bx : bx - ax;
-    ax = String(ax ?? '').toLowerCase();
-    bx = String(bx ?? '').toLowerCase();
-    return sortAsc ? ax.localeCompare(bx) : bx.localeCompare(ax);
+    return String(ax ?? '').localeCompare(String(bx ?? ''));
   });
 
   renderTable();
@@ -159,6 +155,7 @@ exportCsvBtn.addEventListener('click', () => {
   if (!parsedRows.length) return;
 
   const headers = ['Name','Set','Have','Want','Trade','Low','Mid','High'];
+
   const csv = [
     headers.join(','),
     ...parsedRows.map(r => [
@@ -175,10 +172,12 @@ exportCsvBtn.addEventListener('click', () => {
 
   const blob = new Blob([csv], { type: 'text/csv' });
   const url = URL.createObjectURL(blob);
+
   const a = document.createElement('a');
   a.href = url;
   a.download = 'tcgplayer_collection.csv';
   a.click();
+
   URL.revokeObjectURL(url);
 });
 
@@ -211,6 +210,17 @@ exportXlsxBtn.addEventListener('click', async () => {
       cell.value = { text: r.Name, hyperlink: r.Link };
       cell.font = { color: { argb: 'FF0563C1' }, underline: true };
     }
+
+    [6,7,8].forEach(col => {
+      const cell = row.getCell(col);
+      const num = Number(cell.value);
+
+      if (!Number.isNaN(num)) {
+        cell.value = num;
+      }
+
+      cell.numFmt = '"$"#,##0.00';
+    });
   });
 
   const columns = headers.map(header => {
@@ -226,7 +236,7 @@ exportXlsxBtn.addEventListener('click', async () => {
     if (header === 'Name') width = Math.min(width, 60);
     if (header === 'Set') width = Math.min(width, 45);
     if (['Have','Want','Trade'].includes(header)) width = 10;
-    if (['Low','Mid','High'].includes(header)) width = 12;
+    if (['Low','Mid','High'].includes(header)) width = 14;
 
     return { key: header, width };
   });
